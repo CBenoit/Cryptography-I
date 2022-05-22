@@ -25,33 +25,27 @@ fn main() {
     let target = ciphertexts.last().cloned().unwrap();
     let target_len = target.len();
 
-    let table: SpaceTable = ciphertexts
+    let mut table: SpaceTable = HashMap::new();
+
+    for ((c1_idx, c1_str), (c2_idx, c2_str)) in ciphertexts
         .iter()
         .map(Vec::as_slice)
         .enumerate()
         .tuple_combinations::<((usize, &[u8]), (usize, &[u8]))>()
-        .fold(
-            HashMap::new(),
-            |mut table, ((c1_idx, c1_str), (c2_idx, c2_str))| {
-                c1_str[..target_len]
-                    .iter()
-                    .enumerate()
-                    .zip(&c2_str[..target_len])
-                    .for_each(|((idx, &c1), &c2)| {
-                        // c1 ^ c2 = m1 ^ k ^ m2 ^ k = m1 ^ m2
-                        let xored = c1 ^ c2;
-                        // if the resulting value is alphabetic, one of the two is a space (0x20)
-                        if char::from(xored).is_alphabetic() || xored == 0 {
-                            // count in the space table
-                            let subtable = table.entry(idx).or_default();
-                            *subtable.entry(c1_idx).or_default() += 1;
-                            *subtable.entry(c2_idx).or_default() += 1;
-                        }
-                    });
-
-                table
-            },
-        );
+    {
+        for ((idx, &c1), &c2) in c1_str.iter().enumerate().zip(c2_str).take(target_len) {
+            // c1 ^ c2 = m1 ^ k ^ m2 ^ k = m1 ^ m2
+            let xored = c1 ^ c2;
+            // if the resulting value is alphabetic, one of the two is a space (0x20)
+            // also assume both were spaces when xored value is 0 (could be wrong, but overall gives better results)
+            if char::from(xored).is_alphabetic() || xored == 0 {
+                // count in the space table
+                let subtable = table.entry(idx).or_default();
+                *subtable.entry(c1_idx).or_default() += 1;
+                *subtable.entry(c2_idx).or_default() += 1;
+            }
+        }
+    }
 
     let mut key = vec![0; target_len];
 
