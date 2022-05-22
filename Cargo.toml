@@ -1,0 +1,11 @@
+[package]
+name = "w1-programming-assignment"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+camino = "1.0.9"
+hex = "0.4.3"
+itertools = "0.10.3"
+tap = "1.0.1"
